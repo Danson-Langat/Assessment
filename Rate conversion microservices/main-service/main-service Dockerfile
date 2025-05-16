@@ -1,0 +1,4 @@
+FROM openjdk:17-jdk-slim
+VOLUME /tmp
+COPY target/main-service.war app.war
+ENTRYPOINT ["java", "-jar", "/app.war"]

@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: currency
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root@2023
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  assessment:
+    build:
+      context: ./assessment
+      dockerfile: rate-service Dockerfile  # Make sure this file exists in the assessment folder
+    ports:
+      - "8081:8081"
+    environment:
+      EXCHANGE_API_URL: https://api.exchangerate-api.com/v4/latest
+
+  main-service:
+    build:
+      context: ./main-service
+      dockerfile: main-service Dockerfile  # Make sure this file exists in the main-service folder
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: r2dbc:postgresql://postgres:5432/currency
+      DB_USERNAME: postgres
+      DB_PASSWORD: root@2023
+      RATE_SERVICE_URL: http://assessment:8081/rate
+    depends_on:
+      - postgres
+      - assessment
